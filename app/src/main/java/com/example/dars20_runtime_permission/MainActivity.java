@@ -1,17 +1,23 @@
 package com.example.dars20_runtime_permission;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
+import android.view.View;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.google.android.material.snackbar.Snackbar;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -24,12 +30,14 @@ public class MainActivity
     private final int READ_STORAGE_REQ_CODE = 1001;
     private FileAdapter adapter;
     private LinkedList<File> queue;
+    private View rootView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         queue = new LinkedList<>();
+        rootView = findViewById(R.id.root_view);
         initRv();
     }
 
@@ -50,12 +58,39 @@ public class MainActivity
                 queue.add(root);
                 return root.listFiles();
             } else {
-                requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, READ_STORAGE_REQ_CODE);
+                if (shouldShowRequestPermissionRationale(Manifest.permission.READ_EXTERNAL_STORAGE)) {
+//                    alertWithDialog();
+                    alertWithSnackbar();
+                } else
+                    requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, READ_STORAGE_REQ_CODE);
                 return new File[0];
             }
         } else {
             return Environment.getExternalStorageDirectory().listFiles();
         }
+    }
+
+
+    @SuppressLint("NewApi")
+    private void alertWithSnackbar() {
+        Snackbar snackbar = Snackbar.make(rootView, "Please give permission", Snackbar.LENGTH_SHORT);
+        snackbar.setAction("GIVE", v -> requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, READ_STORAGE_REQ_CODE));
+        snackbar.setActionTextColor(Color.BLUE);
+        snackbar.show();
+    }
+
+    @SuppressLint("NewApi")
+    private void alertWithDialog() {
+        AlertDialog dialog = new AlertDialog.Builder(this)
+                .setTitle("Permission Explanation")
+                .setMessage("Manga ruhsat ber bla bla bla ish uchun.")
+                .setPositiveButton("OK", (dialog1, which) -> requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, READ_STORAGE_REQ_CODE))
+                .setNegativeButton("NO", (dialog12, which) -> dialog12.dismiss())
+                .setCancelable(false)
+                .create();
+        //todo snackbar
+
+        dialog.show();
     }
 
     @Override
